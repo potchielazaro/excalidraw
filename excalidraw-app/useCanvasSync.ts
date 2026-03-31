@@ -2,8 +2,8 @@
 // Drop this file into excalidraw-app/src/hooks/useCanvasSync.ts
 
 import { useEffect, useRef, useCallback } from "react";
-import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types/types";
+import type { ExcalidrawElement } from "@excalidraw/element/types";
+import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 
 const API = "https://tools.tmtyl.com/whiteboard-api";
 const SAVE_DEBOUNCE_MS = 2000; // save 2 seconds after last change
