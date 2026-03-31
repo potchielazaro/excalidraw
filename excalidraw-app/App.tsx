@@ -147,6 +147,9 @@ import "./index.scss";
 
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar } from "./components/AppSidebar";
+import { getCanvasIdFromUrl, loadCanvasFromApi, useCanvasSync } from "./useCanvasSync";
+import type { CanvasData } from "./useCanvasSync";
+import { SaveIndicator } from "./components/SaveIndicator";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -420,6 +423,11 @@ const ExcalidrawWrapper = () => {
 
   const [, forceRefresh] = useState(false);
 
+  // ── Sisi Whiteboard canvas sync ────────────────────────────────────────────
+  const [canvasId] = useState<string | null>(getCanvasIdFromUrl);
+  const [canvasMeta, setCanvasMeta] = useState<CanvasData | null>(null);
+  const { saveCanvas } = useCanvasSync(canvasId);
+
   useEffect(() => {
     if (isDevEnv()) {
       const debugState = loadSavedDebugState();
@@ -519,6 +527,23 @@ const ExcalidrawWrapper = () => {
     },
     [collabAPI, excalidrawAPI],
   );
+
+  // Load canvas from SisiAdHub when URL contains #canvas-{id}
+  useEffect(() => {
+    if (!canvasId || !excalidrawAPI) return;
+    loadCanvasFromApi(canvasId).then((result) => {
+      if (!result) return;
+      setCanvasMeta(result.meta);
+      excalidrawAPI.updateScene({
+        elements: result.elements as any,
+        appState: result.appState as any,
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+      if (result.files && Object.keys(result.files).length > 0) {
+        excalidrawAPI.addFiles(Object.values(result.files) as any);
+      }
+    });
+  }, [canvasId, excalidrawAPI]);
 
   useEffect(() => {
     if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
@@ -716,7 +741,7 @@ const ExcalidrawWrapper = () => {
       });
     }
 
-    // Render the debug scene if the debug canvas is available
+ // Render the debug scene if the debug canvas is available
     if (debugCanvasRef.current && excalidrawAPI) {
       debugRenderer(
         debugCanvasRef.current,
@@ -725,6 +750,9 @@ const ExcalidrawWrapper = () => {
         window.devicePixelRatio,
       );
     }
+
+    // Auto-save to SisiAdHub if opened via dashboard
+    saveCanvas(elements, appState, files);
   };
 
   const [latestShareableLink, setLatestShareableLink] = useState<string | null>(
@@ -1261,7 +1289,8 @@ const ExcalidrawWrapper = () => {
             ref={debugCanvasRef}
           />
         )}
-      </Excalidraw>
+</Excalidraw>
+      <SaveIndicator canvasName={canvasMeta?.name ?? null} />
     </div>
   );
 };
