@@ -128,3 +128,21 @@
     }
   }
 }
+.welcome-screen-center__logo,
+.welcome-screen-center__heading,
+.welcome-screen-center__menu {
+  display: none !important;
+}
+
+.welcome-screen-center::before {
+  content: '';
+  display: block;
+  width: 320px;
+  height: 120px;
+  background-image: url('/whiteboard-intro.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  opacity: 0.15;
+  margin: 0 auto 24px;
+}
