@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import type { ExcalidrawElement } from "@excalidraw/element/types";
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 
-const API = "https://tools.tmtyl.com/whiteboard-api";
+const API = "https://tools.tmtyl.studio/whiteboard-api";
 const SAVE_DEBOUNCE_MS = 2000;
 
 export interface CanvasData {
