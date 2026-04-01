@@ -986,15 +986,10 @@ const ExcalidrawWrapper = () => {
           setTheme={(theme) => setAppTheme(theme)}
           refresh={() => forceRefresh((prev) => !prev)}
         />
-<AppWelcomeScreen
-  onCollabDialogOpen={onCollabDialogOpen}
-  isCollabEnabled={!isCollabDisabled}
-/>
-      alt="Sisi Whiteboard"
-      style={{ width: 320, opacity: 0.15 }}
-    />
-  </AppWelcomeScreen.Center>
-</AppWelcomeScreen>
+        <AppWelcomeScreen
+          onCollabDialogOpen={onCollabDialogOpen}
+          isCollabEnabled={!isCollabDisabled}
+        />
         <OverwriteConfirmDialog>
           <OverwriteConfirmDialog.Actions.ExportToImage />
           <OverwriteConfirmDialog.Actions.SaveToDisk />
