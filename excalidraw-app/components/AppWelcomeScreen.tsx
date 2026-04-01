@@ -1,4 +1,3 @@
-import { POINTER_EVENTS } from "@excalidraw/common";
 import { useI18n } from "@excalidraw/excalidraw/i18n";
 import { WelcomeScreen } from "@excalidraw/excalidraw/index";
 import React from "react";
@@ -18,12 +17,12 @@ export const AppWelcomeScreen: React.FC<{
       <WelcomeScreen.Hints.HelpHint />
       <WelcomeScreen.Center>
         <img
-          src="/whiteboard-intro.svg"
+          src="/Whiteboard-Intro.svg"
           alt="Sisi Whiteboard"
           style={{
             width: 380,
             opacity: 0.2,
-            pointerEvents: POINTER_EVENTS.none,
+            pointerEvents: "none",
             marginBottom: 24,
           }}
         />
