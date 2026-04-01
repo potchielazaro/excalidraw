@@ -399,7 +399,7 @@ const ExcalidrawWrapper = () => {
 
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  
     trackEvent("load", "frame", getFrame());
     // Delayed so that the app has a time to load the latest SW
     setTimeout(() => {
@@ -529,16 +529,19 @@ const ExcalidrawWrapper = () => {
   );
 
   // Load canvas from SisiAdHub when URL contains #canvas-{id}
-  useEffect(() => {
-    if (!canvasId || !excalidrawAPI) return;
-    loadCanvasFromApi(canvasId).then((result) => {
-      if (!result) return;
-      setCanvasMeta(result.meta);
-      excalidrawAPI.updateScene({
-        elements: result.elements as any,
-        appState: result.appState as any,
-        captureUpdate: CaptureUpdateAction.NEVER,
-      });
+// Load canvas from SisiAdHub when URL contains #canvas-{id}
+useEffect(() => {
+  if (!canvasId || !excalidrawAPI) return;
+  loadCanvasFromApi(canvasId).then((result) => {
+    if (!result) return;
+    setCanvasMeta(result.meta);
+    // Clear local canvas first, then load from API
+    excalidrawAPI.updateScene({
+      elements: result.elements.length > 0 ? result.elements as any : [],
+      appState: { ...result.appState as any, isLoading: false },
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
+    excalidrawAPI.scrollToContent();
       if (result.files && Object.keys(result.files).length > 0) {
         excalidrawAPI.addFiles(Object.values(result.files) as any);
       }
