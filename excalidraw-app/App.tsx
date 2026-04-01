@@ -533,7 +533,15 @@ const ExcalidrawWrapper = () => {
 useEffect(() => {
   if (!canvasId || !excalidrawAPI) return;
   loadCanvasFromApi(canvasId).then((result) => {
-    if (!result) return;
+    if (!result) {
+      // New empty canvas — clear local storage content
+      excalidrawAPI.updateScene({
+        elements: [],
+        appState: { isLoading: false } as any,
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+      return;
+    }
     setCanvasMeta(result.meta);
     // Clear local canvas first, then load from API
     excalidrawAPI.updateScene({
