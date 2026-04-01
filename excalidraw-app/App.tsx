@@ -174,17 +174,10 @@ declare global {
 
 let pwaEvent: BeforeInstallPromptEvent | null = null;
 
-// Adding a listener outside of the component as it may (?) need to be
-// subscribed early to catch the event.
-//
-// Also note that it will fire only if certain heuristics are met (user has
-// used the app for some time, etc.)
 window.addEventListener(
   "beforeinstallprompt",
   (event: BeforeInstallPromptEvent) => {
-    // prevent Chrome <= 67 from automatically showing the prompt
     event.preventDefault();
-    // cache for later use
     pwaEvent = event;
   },
 );
@@ -236,8 +229,6 @@ const initializeScene = async (opts: {
 
   let scene: Omit<
     RestoredDataState,
-    // we're not storing files in the scene database/localStorage, and instead
-    // fetch them async from a different store
     "files"
   > & {
     scrollToContent?: boolean;
@@ -253,11 +244,8 @@ const initializeScene = async (opts: {
   const isExternalScene = !!(id || jsonBackendMatch || roomLinkData);
   if (isExternalScene) {
     if (
-      // don't prompt if scene is empty
       !scene.elements.length ||
-      // don't prompt for collab scenes because we don't override local storage
       roomLinkData ||
-      // otherwise, prompt whether user wants to override current scene
       (await openConfirmModal(shareableLinkConfirmDialog))
     ) {
       if (jsonBackendMatch) {
@@ -276,8 +264,6 @@ const initializeScene = async (opts: {
           ),
           appState: restoreAppState(
             imported.appState,
-            // local appState when importing from backend to ensure we restore
-            // localStorage user settings which we do not persist on server.
             localDataState?.appState,
           ),
         };
@@ -287,7 +273,6 @@ const initializeScene = async (opts: {
         window.history.replaceState({}, APP_NAME, window.location.origin);
       }
     } else {
-      // https://github.com/excalidraw/excalidraw/issues/1919
       if (document.hidden) {
         return new Promise((resolve, reject) => {
           window.addEventListener(
@@ -334,9 +319,6 @@ const initializeScene = async (opts: {
     const scene = await opts.collabAPI.startCollaboration(roomLinkData);
 
     return {
-      // when collaborating, the state may have already been updated at this
-      // point (we may have received updates from other clients), so reconcile
-      // elements and appState with existing state
       scene: {
         ...scene,
         appState: {
@@ -347,8 +329,6 @@ const initializeScene = async (opts: {
             },
             excalidrawAPI.getAppState(),
           ),
-          // necessary if we're invoking from a hashchange handler which doesn't
-          // go through App.initializeScene() that resets this flag
           isLoading: false,
         },
         elements: reconcileElements(
@@ -386,9 +366,6 @@ const ExcalidrawWrapper = () => {
 
   const editorInterface = useEditorInterface();
 
-  // initial state
-  // ---------------------------------------------------------------------------
-
   const initialStatePromiseRef = useRef<{
     promise: ResolvablePromise<ExcalidrawInitialDataState | null>;
   }>({ promise: null! });
@@ -399,9 +376,8 @@ const ExcalidrawWrapper = () => {
 
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  
+  useEffect(() => {
     trackEvent("load", "frame", getFrame());
-    // Delayed so that the app has a time to load the latest SW
     setTimeout(() => {
       trackEvent("load", "version", getVersion());
     }, VERSION_TIMEOUT);
@@ -417,7 +393,6 @@ const ExcalidrawWrapper = () => {
   useHandleLibrary({
     excalidrawAPI,
     adapter: LibraryIndexedDBAdapter,
-    // TODO maybe remove this in several months (shipped: 24-03-11)
     migrationAdapter: LibraryLocalStorageMigrationAdapter,
   });
 
@@ -479,7 +454,6 @@ const ExcalidrawWrapper = () => {
 
         if (data.isExternalScene) {
           if (fileIds.length) {
-            // Direct Firebase call (not through FileManager), so track manually
             FileStatusStore.updateStatuses(
               fileIds.map((id) => [id, "loading"]),
             );
@@ -517,8 +491,6 @@ const ExcalidrawWrapper = () => {
                 });
               });
           }
-          // on fresh load, clear unused files from IDB (from previous
-          // session)
           LocalData.fileStorage.clearObsoleteFiles({
             currentFileIds: fileIds,
           });
@@ -528,49 +500,41 @@ const ExcalidrawWrapper = () => {
     [collabAPI, excalidrawAPI],
   );
 
-  // Load canvas from SisiAdHub when URL contains #canvas-{id}
-// Load canvas from SisiAdHub when URL contains #canvas-{id}
-useEffect(() => {
-  if (!canvasId || !excalidrawAPI) return;
-  loadCanvasFromApi(canvasId).then((result) => {
-    if (!result) {
-      // New empty canvas — clear local storage content
-      excalidrawAPI.updateScene({
-        elements: [],
-        appState: { isLoading: false } as any,
-        captureUpdate: CaptureUpdateAction.NEVER,
-      });
-      return;
-    }
-    setCanvasMeta(result.meta);
-    // Clear local canvas first, then load from API
-    excalidrawAPI.updateScene({
-      elements: result.elements.length > 0 ? result.elements as any : [],
-      appState: { ...result.appState as any, isLoading: false },
-      captureUpdate: CaptureUpdateAction.NEVER,
-    });
-    excalidrawAPI.scrollToContent();
-      if (result.files && Object.keys(result.files).length > 0) {
-        excalidrawAPI.addFiles(Object.values(result.files) as any);
+  // ── Sisi: Load canvas from API via initialData promise (runs before render) ─
+  useEffect(() => {
+    if (!canvasId) return;
+    loadCanvasFromApi(canvasId).then((result) => {
+      if (result) {
+        setCanvasMeta(result.meta);
+        initialStatePromiseRef.current.promise.resolve({
+          elements: result.elements as any,
+          appState: result.appState as any,
+          files: result.files,
+        });
+      } else {
+        // New empty canvas — start blank
+        initialStatePromiseRef.current.promise.resolve({
+          elements: [],
+          appState: {},
+        });
       }
     });
-  }, [canvasId, excalidrawAPI]);
+  }, [canvasId]);
 
-useEffect(() => {
-  if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
-    return;
-  }
+  useEffect(() => {
+    if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
+      return;
+    }
 
-  // If opening a specific canvas from dashboard, skip local storage
-  if (canvasId) {
-    initialStatePromiseRef.current.promise.resolve(null);
-    return;
-  }
+    // If opening a specific canvas from dashboard, skip local storage
+    if (canvasId) {
+      return;
+    }
 
-  initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
-    loadImages(data, /* isInitialLoad */ true);
-    initialStatePromiseRef.current.promise.resolve(data.scene);
-  });
+    initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
+      loadImages(data, /* isInitialLoad */ true);
+      initialStatePromiseRef.current.promise.resolve(data.scene);
+    });
 
     const onHashChange = async (event: HashChangeEvent) => {
       event.preventDefault();
@@ -599,19 +563,18 @@ useEffect(() => {
       }
     };
 
-const syncData = debounce(() => {
-  if (isTestEnv()) {
-    return;
-  }
-  // Don't sync local storage when viewing a specific canvas from dashboard
-  if (canvasId) {
-    return;
-  }
-  if (
-    !document.hidden &&
-    ((collabAPI && !collabAPI.isCollaborating()) || isCollabDisabled)
-  ) {
-        // don't sync if local state is newer or identical to browser state
+    const syncData = debounce(() => {
+      if (isTestEnv()) {
+        return;
+      }
+      // Don't sync local storage when viewing a specific canvas from dashboard
+      if (canvasId) {
+        return;
+      }
+      if (
+        !document.hidden &&
+        ((collabAPI && !collabAPI.isCollaborating()) || isCollabDisabled)
+      ) {
         if (isBrowserStorageStateNewer(STORAGE_KEYS.VERSION_DATA_STATE)) {
           const localDataState = importFromLocalStorage();
           const username = importUsernameFromLocalStorage();
@@ -637,7 +600,6 @@ const syncData = debounce(() => {
             elements?.reduce((acc, element) => {
               if (
                 isInitializedImageElement(element) &&
-                // only load and update images that aren't already loaded
                 !currFiles[element.fileId]
               ) {
                 return acc.concat(element.fileId);
@@ -730,8 +692,6 @@ const syncData = debounce(() => {
       collabAPI.syncElements(elements);
     }
 
-    // this check is redundant, but since this is a hot path, it's best
-    // not to evaludate the nested expression every time
     if (!LocalData.isSavePaused()) {
       LocalData.save(elements, appState, files, () => {
         if (excalidrawAPI) {
@@ -762,7 +722,6 @@ const syncData = debounce(() => {
       });
     }
 
- // Render the debug scene if the debug canvas is available
     if (debugCanvasRef.current && excalidrawAPI) {
       debugRenderer(
         debugCanvasRef.current,
@@ -842,9 +801,6 @@ const syncData = debounce(() => {
     [setShareDialogState],
   );
 
-  // ---------------------------------------------------------------------------
-  // onExport — intercepts file save to wait for pending image loads
-  // ---------------------------------------------------------------------------
   const onExport: Required<ExcalidrawProps>["onExport"] = useCallback(
     async function* () {
       let snapshot = FileStatusStore.getSnapshot();
@@ -855,14 +811,12 @@ const syncData = debounce(() => {
         return;
       }
 
-      // Yield initial progress
       yield {
         type: "progress",
         progress: (total - pending) / total,
         message: `Loading images (${total - pending}/${total})...`,
       };
 
-      // Wait for all pending images to finish
       while (true) {
         snapshot = await FileStatusStore.pull(snapshot.version);
         const { pending: nowPending, total: nowTotal } =
@@ -887,14 +841,6 @@ const syncData = debounce(() => {
     [],
   );
 
-  // const onExport = () => {
-  //   return new Promise((r) => setTimeout(r, 2500));
-  //   // console.log("onExport");
-  // };
-
-  // browsers generally prevent infinite self-embedding, there are
-  // cases where it still happens, and while we disallow self-embedding
-  // by not whitelisting our own origin, this serves as an additional guard
   if (isSelfEmbedding) {
     return (
       <div
@@ -1294,8 +1240,6 @@ const syncData = debounce(() => {
                 if (pwaEvent) {
                   pwaEvent.prompt();
                   pwaEvent.userChoice.then(() => {
-                    // event cannot be reused, but we'll hopefully
-                    // grab new one as the event should be fired again
                     pwaEvent = null;
                   });
                 }
@@ -1310,7 +1254,7 @@ const syncData = debounce(() => {
             ref={debugCanvasRef}
           />
         )}
-</Excalidraw>
+      </Excalidraw>
       <SaveIndicator canvasName={canvasMeta?.name ?? null} />
     </div>
   );
