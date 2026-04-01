@@ -16,16 +16,18 @@ export const AppWelcomeScreen: React.FC<{
       <WelcomeScreen.Hints.ToolbarHint />
       <WelcomeScreen.Hints.HelpHint />
       <WelcomeScreen.Center>
-        <img
-          src="/Whiteboard-Intro.svg"
-          alt="Sisi Whiteboard"
-          style={{
-            width: 380,
-            opacity: 5.0,
-            pointerEvents: "none",
-            marginBottom: 24,
-          }}
-        />
+        <WelcomeScreen.Center.Logo>
+          <img
+            src="/Whiteboard-Intro.svg"
+            alt="Sisi Whiteboard"
+            style={{
+              width: 380,
+              opacity: 0.15,
+              pointerEvents: "none",
+              marginBottom: 24,
+            }}
+          />
+        </WelcomeScreen.Center.Logo>
       </WelcomeScreen.Center>
     </WelcomeScreen>
   );
