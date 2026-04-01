@@ -21,7 +21,7 @@ export const AppWelcomeScreen: React.FC<{
           alt="Sisi Whiteboard"
           style={{
             width: 380,
-            opacity: 0.2,
+            opacity: 0.1,
             pointerEvents: "none",
             marginBottom: 24,
           }}
