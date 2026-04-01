@@ -989,7 +989,7 @@ const ExcalidrawWrapper = () => {
 <AppWelcomeScreen>
   <AppWelcomeScreen.Center>
     <img
-      src="/Whiteboard - Intro.svg"
+      src="/Whiteboard-Intro.svg"
       alt="Sisi Whiteboard"
       style={{ width: 320, opacity: 0.15 }}
     />
