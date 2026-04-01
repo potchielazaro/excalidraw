@@ -548,15 +548,21 @@ useEffect(() => {
     });
   }, [canvasId, excalidrawAPI]);
 
-  useEffect(() => {
-    if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
-      return;
-    }
+useEffect(() => {
+  if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
+    return;
+  }
 
-    initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
-      loadImages(data, /* isInitialLoad */ true);
-      initialStatePromiseRef.current.promise.resolve(data.scene);
-    });
+  // If opening a specific canvas from dashboard, skip local storage
+  if (canvasId) {
+    initialStatePromiseRef.current.promise.resolve(null);
+    return;
+  }
+
+  initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
+    loadImages(data, /* isInitialLoad */ true);
+    initialStatePromiseRef.current.promise.resolve(data.scene);
+  });
 
     const onHashChange = async (event: HashChangeEvent) => {
       event.preventDefault();
