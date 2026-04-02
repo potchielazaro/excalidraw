@@ -1,0 +1,195 @@
+@import "../packages/excalidraw/css/variables.module.scss";
+
+.excalidraw {
+  --color-primary-contrast-offset: #625ee0; // to offset Chubb illusion
+
+  &.theme--dark {
+    --color-primary-contrast-offset: #726dff; // to offset Chubb illusion
+  }
+
+  .footer-center {
+    justify-content: flex-end;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-inline-start: auto;
+  }
+
+  .encrypted-icon {
+    border-radius: var(--space-factor);
+    color: var(--color-primary);
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-inline-start: auto;
+    margin-inline-end: 0.6em;
+    z-index: var(--zIndex-layerUI);
+
+    svg {
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+
+  .dropdown-menu-container {
+    .dropdown-menu-item {
+      &.active-collab {
+        background-color: #ecfdf5;
+        color: #064e3c;
+      }
+      &.highlighted {
+        color: var(--color-promo);
+        font-weight: 700;
+        .dropdown-menu-item__icon g {
+          stroke-width: 2;
+        }
+      }
+    }
+  }
+
+  &.theme--dark {
+    .dropdown-menu-item {
+      &.active-collab {
+        background-color: #064e3c;
+        color: #ecfdf5;
+      }
+    }
+  }
+
+  .alert {
+    pointer-events: none;
+    position: absolute;
+    top: 6.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    text-align: center;
+    line-height: 1.5;
+    border-radius: var(--border-radius-md);
+    z-index: 6;
+    white-space: pre;
+
+    &--warning {
+      background-color: var(--color-warning);
+      color: var(--color-text-warning);
+    }
+
+    &--danger {
+      background-color: var(--color-danger-dark);
+      color: var(--color-danger-text);
+    }
+  }
+}
+
+.excalidraw-app.is-collaborating {
+  [data-testid="clear-canvas-button"] {
+    display: none;
+  }
+}
+
+.plus-banner {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  align-items: center;
+  border: 1px solid var(--color-primary);
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--border-radius-lg);
+  background-color: var(--island-bg-color);
+  text-decoration: none !important;
+
+  font-family: var(--ui-font);
+  font-size: 0.8333rem;
+  box-sizing: border-box;
+  height: var(--lg-button-size);
+
+  border: none;
+  box-shadow: 0 0 0 1px var(--color-surface-lowest);
+  background-color: var(--color-surface-low);
+  color: var(--button-color, var(--color-on-surface)) !important;
+
+  &:active {
+    box-shadow: 0 0 0 1px var(--color-brand-active);
+  }
+
+  &:hover {
+    background-color: var(--color-primary);
+    color: white !important;
+  }
+
+  &:active {
+    background-color: var(--color-primary-darker);
+  }
+}
+
+.theme--dark {
+  .plus-banner {
+    &:hover {
+      color: black !important;
+    }
+  }
+}
+
+.welcome-screen-center__logo,
+.welcome-screen-center__heading,
+.welcome-screen-center__menu {
+  display: none !important;
+}
+
+.welcome-screen-center::before {
+  content: '';
+  display: block;
+  width: 320px;
+  height: 120px;
+  background-image: url('/whiteboard-intro.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  opacity: 0.15;
+  margin: 0 auto 24px;
+}
+
+// ── Hide library and presentation buttons ─────────────────────────────────────
+
+// Library button (top-right toolbar)
+.layer-ui__wrapper button[aria-label="Library"],
+.layer-ui__wrapper button[title="Library"],
+.layer-ui__wrapper [data-testid="library-button"] {
+  display: none !important;
+}
+
+// Presentation / Slides mode button
+.layer-ui__wrapper button[aria-label="Presentation mode"],
+.layer-ui__wrapper button[aria-label="Slides"],
+.layer-ui__wrapper button[title="Slides"],
+.layer-ui__wrapper [data-testid="presentation-mode-button"],
+.layer-ui__wrapper [data-testid="sidebar-trigger--default--slides"] {
+  display: none !important;
+}
+
+// Hide Excalidraw+ comments button (we replace this with our own chat)
+button[aria-label="Comments"],
+[data-testid="sidebar-trigger--default--comments"],
+[data-testid="sidebar-trigger-comments"] {
+  display: none !important;
+}
+
+// ── Sisi Chat Sidebar styles ──────────────────────────────────────────────────
+
+.sisi-chat-sidebar {
+  .sidebar-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-border-card);
+  }
+
+  // Smooth scrollbar for message list
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-card);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
