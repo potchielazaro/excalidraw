@@ -140,6 +140,7 @@ import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
 import "./index.scss";
 
 import { AppSidebar } from "./components/AppSidebar";
+import { ChatSidebar, CHAT_SIDEBAR_NAME } from "./components/ChatSidebar";
 import { getCanvasIdFromUrl, loadCanvasFromApi, useCanvasSync } from "./useCanvasSync";
 import type { CanvasData } from "./useCanvasSync";
 import { SaveIndicator } from "./components/SaveIndicator";
@@ -907,6 +908,26 @@ const ExcalidrawWrapper = () => {
                 }
                 editorInterface={editorInterface}
               />
+              <button
+                onClick={() =>
+                  excalidrawAPI?.toggleSidebar({ name: CHAT_SIDEBAR_NAME })
+                }
+                title="Canvas Chat"
+                style={{
+                  background: "var(--color-surface-low)",
+                  border: "1px solid var(--color-border-card)",
+                  borderRadius: "var(--border-radius-lg)",
+                  cursor: "pointer",
+                  padding: "0 10px",
+                  height: "var(--lg-button-size)",
+                  fontSize: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                💬
+              </button>
             </div>
           );
         }}
@@ -992,6 +1013,7 @@ const ExcalidrawWrapper = () => {
         />
 
         <AppSidebar />
+        <ChatSidebar canvasId={canvasId} />
 
         {errorMessage && (
           <ErrorDialog onClose={() => setErrorMessage("")}>
