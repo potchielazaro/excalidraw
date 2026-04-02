@@ -193,3 +193,7 @@ button[aria-label="Comments"],
     background: transparent;
   }
 }
+// Hide default sidebar trigger (library button)
+.default-sidebar-trigger {
+  display: none !important;
+}
